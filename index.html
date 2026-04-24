@@ -1,36 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guardian Crypto Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guardian Time Engine V5</title>
+<style>
+:root{--bg:#050505;--card:#151515;--btn:#242424;--line:#2b2b2b;--txt:#f7f7f7;--muted:#999;--green:#19c37d;--red:#ff4d4d;--gold:#ffd166;--blue:#58a6ff;--purple:#8b5cf6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Arial,sans-serif}
+header{position:sticky;top:0;background:#050505;border-bottom:1px solid var(--line);padding:10px;z-index:10}
+h1{font-size:18px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:4px}
+main{padding:10px;max-width:1200px;margin:auto}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.big{font-size:42px;font-weight:900}.wait{color:var(--gold)}.entry{color:var(--green)}.no{color:var(--red)}
+.bar{height:12px;background:#222;border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button,input,textarea{border:1px solid var(--line);background:var(--btn);color:var(--txt);border-radius:12px;padding:12px;font-weight:800}
+button.active{background:#063f2a;border-color:var(--green)}button.red{background:#401818;border-color:var(--red)}button.gold{background:#403515;border-color:var(--gold)}
+.title{font-weight:900;margin-bottom:10px}.pill{float:right;background:#eee;color:#111;border-radius:99px;padding:4px 10px;font-size:11px}
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.links a{text-align:center;text-decoration:none;color:white;background:#07131a;border:1px solid #123;border-radius:12px;padding:14px;font-weight:900}
+textarea{width:100%;min-height:90px;font-family:monospace}input{width:100%}
+.footer{position:sticky;bottom:0;background:#080808;border-top:1px solid var(--line);padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.small{font-size:12px;color:var(--muted);line-height:1.4}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px solid var(--line);padding:7px;text-align:left}
+</style>
 </head>
 <body>
-  <main class="app">
-    <h1>Guardian Crypto Dashboard</h1>
-    <p class="subtitle">Track BTC, ETH, and crypto market signals.</p>
+<header>
+<h1>⚔️ Guardian Time Engine V5</h1>
+<div class="sub">Regime → Bias → Intent → Zone → Trigger → Confirm → Entry | Sheet Sync Pro</div>
+</header>
 
-    <section class="cards">
-      <div class="card">
-        <h2>Bitcoin</h2>
-        <p id="btc-price">Loading...</p>
-      </div>
+<main>
+<section class="card">
+<div class="small">FINAL DECISION</div>
+<div id="final" class="big wait">WAIT</div>
+<div id="dir">Direction: -</div>
+<div id="note" class="small">Incomplete sequence. Wait for confirmation.</div>
+<div class="bar"><div id="fill" class="fill"></div></div>
+<div id="score" class="small">Score: 0/6</div>
+</section>
 
-      <div class="card">
-        <h2>Ethereum</h2>
-        <p id="eth-price">Loading...</p>
-      </div>
+<section class="card">
+<div class="title">🖥️ Monitor Wall <button style="float:right;padding:7px" onclick="openAll()">Open All</button></div>
+<div class="links">
+<a target="_blank" href="https://www.coinglass.com/pro/futures/liquidationHeatMap">Coinglass Heatmap</a>
+<a target="_blank" href="https://www.coinglass.com/pro/futures/orderbook">Coinglass OBLD</a>
+<a target="_blank" href="https://www.tensorcharts.com/">TensorCharts</a>
+<a target="_blank" href="https://www.bybit.com/trade/usdt/BTCUSDT">Bybit BTC</a>
+<a target="_blank" href="https://www.bookmap.com/">Bookmap</a>
+<a target="_blank" href="https://gammaflip.io/">GammaFlip</a>
+<a target="_blank" href="https://docs.google.com/spreadsheets/">Google Sheets</a>
+<a target="_blank" href="https://www.tradingview.com/chart/">TradingView</a>
+</div>
+</section>
 
-      <div class="card">
-        <h2>Guardian Signal</h2>
-        <p id="signal">Waiting for data...</p>
-      </div>
-    </section>
+<div class="grid" id="cards"></div>
 
-    <button onclick="loadPrices()">Refresh Prices</button>
-  </main>
+<section class="card">
+<div class="title">🛡️ Risk Lock</div>
+<div class="grid">
+<input id="risk" placeholder="Risk % e.g. 0.5" inputmode="decimal" oninput="decide()">
+<input id="rr" placeholder="R:R e.g. 2" inputmode="decimal" oninput="decide()">
+</div>
+<div class="small">Guardian rule: 0.5%–1% risk per trade. Leverage is poison if risk is not locked.</div>
+</section>
 
-  <script src="script.js"></script>
+<section class="card" style="border-color:#3b176b;background:#100018">
+<div class="title">🧠 After Trade Review</div>
+<div class="grid">
+<div class="buttons">
+<button onclick="setVal('result','Win',this)">Win</button>
+<button onclick="setVal('result','Loss',this)" class="red">Loss</button>
+<button onclick="setVal('result','BE',this)" class="gold">BE</button>
+<button onclick="setVal('result','Pending',this)">Pending</button>
+</div>
+<input id="pnl" placeholder="$ / % PnL">
+<input id="shot" placeholder="Screenshot / Drive link">
+<input id="mistake" placeholder="Mistake tag: FOMO / Late Entry / No Retest">
+</div>
+</section>
+
+<section class="card">
+<div class="title">📝 Notes + Journal</div>
+<textarea id="notes" placeholder="Coinglass heatmap / OBLD / Tensor spoof / Bybit VWAP / mistake note..."></textarea>
+<div class="grid">
+<button onclick="saveHistory()">💾 Save Local</button>
+<button onclick="sendSheet()">📤 Send Google Sheet</button>
+<button onclick="copyRow()">📋 Copy Row</button>
+<button onclick="exportCSV()">⬇️ Export CSV</button>
+<button onclick="resetAll()">🧹 Reset</button>
+</div>
+<div style="overflow:auto;margin-top:10px">
+<table id="liveTable"></table>
+</div>
+</section>
+
+<section class="card">
+<div class="title">📚 Saved History <span class="pill" id="count">0</span></div>
+<div style="overflow:auto"><table id="history"></table></div>
+</section>
+</main>
+
+<div class="footer">
+<button onclick="scrollTo(0,0)">⬆️ Top</button>
+<button onclick="document.getElementById('final').scrollIntoView()">🎯 Decision</button>
+<button onclick="document.querySelector('.links').scrollIntoView()">🖥️ Wall</button>
+<button onclick="document.getElementById('notes').scrollIntoView()">📝 Journal</button>
+<button onclick="loadHistory()">📊 Load</button>
+</div>
+
+<script>
+const WEBAPP_URL="https://script.google.com/macros/s/AKfycbxk9l1BVOqDnOq3vfzOuhjqK-LsPtAQQ3esS8WFsvVmYTFc8zESuXP_JHgCVWpGUIzg/exec";
+const links=[...document.querySelectorAll(".links a")].map(a=>a.href);
+const state={regime:null,bias:null,intent:null,zone:null,trigger:null,confirm:null,whale:null,retail:null,gamma:null,result:null};
+const groups=[
+["regime","1️⃣ Regime","WHAT",["Trend","Range","Transition","Unclear"]],
+["bias","2️⃣ Bias / PDI","DIRECTION",["Bullish","Bearish","Absorption","No Bias"]],
+["intent","3️⃣ Intent / Whale","WHO",["Whale Active","Trap","Passive","Unclear"]],
+["zone","4️⃣ Zone","WHERE",["Valid Zone","No Zone","Upper","Lower"]],
+["trigger","5️⃣ Trigger","WHEN",["Kill → Next → Retest","Wait Retest","No Trigger","FOMO"]],
+["confirm","6️⃣ Confirm RVWDSL","FINAL",["ALL PASS","1 Fail"]],
+["whale","🐋 Whale Vision","",["Accumulating","Distributing","Absorbing","Trap Setup"]],
+["retail","🧑 Retail Vision","",["FOMO Buy","Panic Sell","Confused","No Data"]],
+["gamma","🎯 Options / Gamma","SUPPORT",["Gamma + Heatmap Align","Far Zone","Opposite","No Data"]]
+];
+document.getElementById("cards").innerHTML=groups.map(g=>`
+<section class="card"><div class="title">${g[1]} <span class="pill">${g[2]}</span></div>
+<div class="buttons">${g[3].map(v=>`<button onclick="pick('${g[0]}','${v}',this)">${v}</button>`).join("")}</div></section>`).join("");
+
+function pick(k,v,btn){state[k]=v;btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("active","red","gold"));btn.classList.add(v.includes("No")||v.includes("Fail")?"red":v.includes("Upper")||v.includes("Lower")||v.includes("Absorb")?"gold":"active");decide();}
+function setVal(k,v,btn){state[k]=v;btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
+function decide(){
+let s=0;if(state.regime&&state.regime!="Unclear")s++;if(state.bias&&state.bias!="No Bias")s++;if(state.intent=="Whale Active")s++;if(state.zone&&state.zone!="No Zone")s++;if(state.trigger=="Kill → Next → Retest")s++;if(state.confirm=="ALL PASS")s++;
+let final="WAIT",dir="-",cls="wait",note="Incomplete sequence. Wait for confirmation.";
+if(s>=6&&state.bias=="Bullish"){final="ENTRY";dir="LONG";cls="entry";note="System allows LONG. Risk first, profit second."}
+else if(s>=6&&state.bias=="Bearish"){final="ENTRY";dir="SHORT";cls="entry";note="System allows SHORT. Risk first, profit second."}
+else if(state.trigger=="FOMO"){final="NO TRADE";dir="-";cls="no";note="FOMO detected. তুমি তরকারি 🍆 — no entry without confirmation."}
+document.getElementById("final").textContent=final;document.getElementById("final").className="big "+cls;
+document.getElementById("dir").textContent="Direction: "+dir;document.getElementById("note").textContent=note;
+document.getElementById("fill").style.width=(s/6*100)+"%";document.getElementById("fill").style.background=s>=6?"var(--green)":s>=4?"var(--gold)":"#555";
+document.getElementById("score").textContent="Score: "+s+"/6";updateLive(final,dir);
+}
+function row(final=document.getElementById("final").textContent,dir=document.getElementById("dir").textContent.replace("Direction: ","")){
+return {time:new Date().toLocaleString(),regime:state.regime||"-",bias:state.bias||"-",intent:state.intent||"-",zone:state.zone||"-",trigger:state.trigger||"-",confirm:state.confirm||"-",whale:state.whale||"-",retail:state.retail||"-",gamma:state.gamma||"-",risk:document.getElementById("risk").value||"-",rr:document.getElementById("rr").value||"-",decision:final,direction:dir,notes:document.getElementById("notes").value||"-",result:state.result||"-",pnl:document.getElementById("pnl").value||"-",screenshot:document.getElementById("shot").value||"-",mistake:document.getElementById("mistake").value||"-"}
+}
+function updateLive(f,d){let r=row(f,d);liveTable.innerHTML="<tr>"+Object.keys(r).map(x=>"<th>"+x+"</th>").join("")+"</tr><tr>"+Object.values(r).map(x=>"<td>"+x+"</td>").join("")+"</tr>"}
+async function sendSheet(){
+let data=row();
+try{await fetch(WEBAPP_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});alert("Sent to Google Sheet ⚔️");saveHistory(false)}
+catch(e){alert("Sheet error ❌ Check Apps Script deployment")}
+}
+function saveHistory(show=true){let arr=JSON.parse(localStorage.guardianV5||"[]");arr.unshift(row());localStorage.guardianV5=JSON.stringify(arr.slice(0,100));loadHistory();if(show)alert("Saved local history ⚔️")}
+function loadHistory(){let arr=JSON.parse(localStorage.guardianV5||"[]");count.textContent=arr.length;history.innerHTML="<tr><th>Time</th><th>Decision</th><th>Dir</th><th>Regime</th><th>Bias</th><th>Whale</th><th>Result</th><th>PnL</th></tr>"+arr.map(r=>`<tr><td>${r.time}</td><td>${r.decision}</td><td>${r.direction}</td><td>${r.regime}</td><td>${r.bias}</td><td>${r.whale}</td><td>${r.result}</td><td>${r.pnl}</td></tr>`).join("")}
+function copyRow(){navigator.clipboard.writeText(Object.values(row()).join("\t"));alert("Journal row copied")}
+function exportCSV(){let arr=JSON.parse(localStorage.guardianV5||"[]");let csv=Object.keys(row()).join(",")+"\n"+arr.map(r=>Object.values(r).map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv]));a.download="guardian_v5.csv";a.click()}
+function resetAll(){Object.keys(state).forEach(k=>state[k]=null);document.querySelectorAll("button").forEach(b=>b.classList.remove("active","red","gold"));["risk","rr","notes","pnl","shot","mistake"].forEach(id=>document.getElementById(id).value="");decide()}
+function openAll(){links.forEach(u=>window.open(u,"_blank"))}
+loadHistory();decide();
+</script>
 </body>
 </html>
