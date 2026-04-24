@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guardian Time Engine Dashboard</title>
+  <style>
+    :root{
+      --bg:#080808; --card:#151515; --muted:#8d8d8d; --text:#f5f5f5;
+      --green:#19c37d; --red:#ff4d5e; --yellow:#ffd166; --blue:#5dade2;
+      --border:#2a2a2a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    header{position:sticky;top:0;background:#050505;border-bottom:1px solid var(--border);padding:14px 12px;z-index:10}
+    h1{font-size:20px;margin:0}
+    .sub{font-size:12px;color:var(--muted);margin-top:4px}
+    main{padding:12px;max-width:780px;margin:auto}
+    .decision{border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px;background:linear-gradient(180deg,#151515,#0d0d0d)}
+    .big{font-size:34px;font-weight:800;letter-spacing:.5px}
+    .note{font-size:14px;color:var(--muted);margin-top:6px}
+    .grid{display:grid;gap:10px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px}
+    .title{display:flex;justify-content:space-between;gap:8px;font-weight:800;margin-bottom:10px}
+    .pill{font-size:12px;color:#111;background:#ddd;border-radius:999px;padding:3px 8px}
+    .buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    button{border:1px solid var(--border);border-radius:13px;padding:13px 8px;background:#222;color:var(--text);font-weight:700;font-size:15px}
+    button.active.green{background:rgba(25,195,125,.22);border-color:var(--green);color:#baffdf}
+    button.active.red{background:rgba(255,77,94,.22);border-color:var(--red);color:#ffd0d5}
+    button.active.yellow{background:rgba(255,209,102,.22);border-color:var(--yellow);color:#fff1bf}
+    button.active.blue{background:rgba(93,173,226,.22);border-color:var(--blue);color:#cfefff}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted);line-height:1.45}
+    textarea{width:100%;min-height:86px;background:#0f0f0f;color:var(--text);border:1px solid var(--border);border-radius:13px;padding:10px;font-size:14px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .copy{background:#1b2a1f;border-color:#265f3b}
+    .reset{background:#2a1b1b;border-color:#5f2630}
+    .ok{color:var(--green)} .bad{color:var(--red)} .wait{color:var(--yellow)}
+    pre{white-space:pre-wrap;background:#050505;border:1px solid var(--border);border-radius:13px;padding:10px;font-size:12px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>⚔️ Guardian Time Engine</h1>
+  <div class="sub">Regime → Bias → Intent → Zone → Trigger → Confirm → Entry</div>
+</header>
+
+<main>
+  <section class="decision">
+    <div class="small">FINAL DECISION</div>
+    <div id="final" class="big wait">WAIT</div>
+    <div id="direction" class="note">Direction: -</div>
+    <div id="guardianNote" class="note">Patience + discipline = gift of Guardian</div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="title">1️⃣ Regime <span class="pill">WHAT</span></div>
+      <div class="buttons" data-key="regime">
+        <button data-val="Trend" class="green">✓ Trend</button>
+        <button data-val="Range" class="yellow">Range</button>
+        <button data-val="Transition" class="blue">Transition</button>
+        <button data-val="No" class="red">✗ Unclear</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">2️⃣ Bias / PDI <span class="pill">DIRECTION</span></div>
+      <div class="buttons" data-key="bias">
+        <button data-val="Bullish" class="green">✓ Bullish PDI</button>
+        <button data-val="Bearish" class="red">✓ Bearish PDI</button>
+        <button data-val="Absorption" class="yellow">Absorption</button>
+        <button data-val="No" class="red">✗ No Bias</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">3️⃣ Intent / Whale <span class="pill">WHO</span></div>
+      <div class="buttons" data-key="intent">
+        <button data-val="Active" class="green">✓ Whale Active</button>
+        <button data-val="Trap" class="red">Trap</button>
+        <button data-val="Passive" class="yellow">Passive</button>
+        <button data-val="No" class="red">✗ Unclear</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">4️⃣ Zone <span class="pill">WHERE</span></div>
+      <div class="buttons" data-key="zone">
+        <button data-val="Yes" class="green">✓ Valid Zone</button>
+        <button data-val="No" class="red">✗ No Zone</button>
+        <button data-val="Upper" class="yellow">Upper Cluster</button>
+        <button data-val="Lower" class="yellow">Lower Cluster</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">5️⃣ Trigger <span class="pill">WHEN</span></div>
+      <div class="buttons" data-key="trigger">
+        <button data-val="Ready" class="green">✓ Kill→Next→Retest</button>
+        <button data-val="Wait" class="yellow">Wait Retest</button>
+        <button data-val="No" class="red">✗ No Trigger</button>
+        <button data-val="FOMO" class="red">🍆 FOMO</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">6️⃣ Confirm RVWDSL <span class="pill">FINAL GATE</span></div>
+      <div class="buttons" data-key="confirm">
+        <button data-val="GO" class="green">✓ ALL PASS</button>
+        <button data-val="NO TRADE" class="red">✗ 1 Fail</button>
+      </div>
+      <div class="small" style="margin-top:8px">R Regime • V VWAP/STD • W Whale • D OBLD/PDI • S Spoof • L TF Align</div>
+    </section>
+
+    <section class="card">
+      <div class="title">🐋 Whale Vision</div>
+      <div class="buttons" data-key="whale">
+        <button data-val="Accumulating" class="green">Accumulating</button>
+        <button data-val="Distributing" class="red">Distributing</button>
+        <button data-val="Absorbing" class="yellow">Absorbing</button>
+        <button data-val="Trap Setup" class="red">Trap Setup</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">🧑 Retail Vision</div>
+      <div class="buttons" data-key="retail">
+        <button data-val="FOMO Buy" class="green">FOMO Buy</button>
+        <button data-val="Panic Sell" class="red">Panic Sell</button>
+        <button data-val="Confused" class="yellow">Confused</button>
+        <button data-val="No Data" class="blue">No Data</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">📝 Notes</div>
+      <textarea id="notes" placeholder="Coinglass heatmap / Tensor spoof / Bybit VWAP note..."></textarea>
+      <div class="actions">
+        <button class="copy" onclick="copySummary()">Copy Journal Row</button>
+        <button class="reset" onclick="resetAll()">Reset</button>
+      </div>
+      <pre id="summary"></pre>
+    </section>
+  </div>
+</main>
+
+<script>
+const state = {regime:null,bias:null,intent:null,zone:null,trigger:null,confirm:null,whale:null,retail:null};
+
+document.querySelectorAll(".buttons").forEach(group=>{
+  group.addEventListener("click", e=>{
+    if(e.target.tagName !== "BUTTON") return;
+    const key = group.dataset.key;
+    state[key] = e.target.dataset.val;
+    [...group.children].forEach(b=>b.classList.remove("active"));
+    e.target.classList.add("active");
+    decide();
+  });
+});
+
+function decide(){
+  let final="WAIT", cls="wait", direction="-", note="Patience + discipline = gift of Guardian";
+  const zoneOK = state.zone === "Yes" || state.zone === "Upper" || state.zone === "Lower";
+  const triggerOK = state.trigger === "Ready";
+  const confirmOK = state.confirm === "GO";
+  const noTrade = state.trigger === "FOMO" || state.confirm === "NO TRADE" || state.zone === "No" || state.regime === "No" || state.bias === "No";
+
+  if(noTrade){
+    final="NO TRADE"; cls="bad"; note="No trade; protect capital.";
+  } else if(confirmOK && triggerOK && zoneOK && state.bias && state.intent){
+    final="ENTRY"; cls="ok";
+    if(state.bias === "Bullish") direction="LONG";
+    else if(state.bias === "Bearish") direction="SHORT";
+    else direction="WAIT / SCALP ONLY";
+    note = "System allows entry. Risk first, profit second.";
+  } else {
+    final="WAIT"; cls="wait"; note="Incomplete sequence. Wait for confirmation.";
+  }
+
+  if(state.whale==="Accumulating" && state.retail==="Panic Sell"){
+    direction = direction==="-" ? "LONG BIAS" : direction;
+    note += " Whale buys while retail panics.";
+  }
+  if(state.whale==="Distributing" && state.retail==="FOMO Buy"){
+    direction = direction==="-" ? "SHORT BIAS" : direction;
+    note += " Whale sells while retail FOMOs.";
+  }
+
+  const f = document.getElementById("final");
+  f.textContent = final; f.className = "big " + cls;
+  document.getElementById("direction").textContent = "Direction: " + direction;
+  document.getElementById("guardianNote").textContent = note;
+  updateSummary();
+}
+
+function updateSummary(){
+  const line = [
+    new Date().toLocaleString(),
+    state.regime||"-", state.bias||"-", state.intent||"-", state.zone||"-",
+    state.trigger||"-", state.confirm||"-", state.whale||"-", state.retail||"-",
+    document.getElementById("final").textContent,
+    document.getElementById("direction").textContent.replace("Direction: ",""),
+    document.getElementById("notes").value.replace(/\n/g," ")
+  ].join("\t");
+  document.getElementById("summary").textContent = 
+`Paste to Excel/Sheet:
+Time\tRegime\tBias\tIntent\tZone\tTrigger\tConfirm\tWhale\tRetail\tDecision\tDirection\tNotes
+${line}`;
+}
+
+document.getElementById("notes").addEventListener("input", updateSummary);
+
+function copySummary(){
+  updateSummary();
+  const text = document.getElementById("summary").textContent.split("\n").slice(2).join("\n");
+  navigator.clipboard.writeText(text);
+  alert("Journal row copied. Paste into Excel/Google Sheet.");
+}
+
+function resetAll(){
+  Object.keys(state).forEach(k=>state[k]=null);
+  document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("notes").value="";
+  decide();
+}
+decide();
+</script>
+</body>
+</html>
