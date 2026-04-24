@@ -1,94 +1,97 @@
 <!doctype html>
-<html lang="bn">
+<html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guardian Time Engine Pro</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian Time Engine V3 — Sheet Sync</title>
 <style>
-:root{--bg:#060606;--card:#141414;--line:#2b2b2b;--text:#f7f7f7;--muted:#999;--g:#19c37d;--r:#ff4d5e;--y:#ffd166;--b:#58a6ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif}
-header{position:sticky;top:0;background:#050505;border-bottom:1px solid var(--line);padding:12px;z-index:10}
-h1{margin:0;font-size:20px}.sub{font-size:12px;color:var(--muted);margin-top:4px}
-main{padding:12px;max-width:1180px;margin:auto}.decision{border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px;background:linear-gradient(180deg,#181818,#0b0b0b)}
-.big{font-size:42px;font-weight:950}.ok{color:var(--g)}.bad{color:var(--r)}.wait{color:var(--y)}
-.note,.small{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45}.scorebar{height:12px;background:#222;border-radius:999px;overflow:hidden;margin-top:10px}.scorefill{height:100%;width:0%;background:var(--y)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
-.title{font-weight:850;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}.pill{background:#e8e8e8;color:#111;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:800}
-.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}button,a.btn{border:1px solid var(--line);background:#242424;color:var(--text);border-radius:14px;padding:13px 8px;font-weight:850;font-size:14px;text-align:center;text-decoration:none}
-button.active.green{background:rgba(25,195,125,.25);border-color:var(--g)}button.active.red{background:rgba(255,77,94,.25);border-color:var(--r)}
-button.active.yellow{background:rgba(255,209,102,.25);border-color:var(--y)}button.active.blue{background:rgba(88,166,255,.25);border-color:var(--b)}
-.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.btn{background:#101010!important}
-textarea,input{width:100%;background:#0b0b0b;color:var(--text);border:1px solid var(--line);border-radius:13px;padding:10px;font-size:14px}textarea{min-height:82px}
-pre{white-space:pre-wrap;background:#050505;border:1px solid var(--line);border-radius:13px;padding:10px;font-size:12px;max-height:180px;overflow:auto}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.history{max-height:260px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:7px;text-align:left}
-.footer-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}
+:root{--bg:#060606;--card:#141414;--line:#2b2b2b;--text:#f7f7f7;--muted:#999;--g:#19c37d;--r:#ff4d5e;--y:#ffd166;--b:#58a6ff;--p:#a855f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;padding-bottom:118px}
+header{position:sticky;top:0;z-index:10;background:#050505;border-bottom:1px solid var(--line);padding:12px 14px}
+h1{font-size:18px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:4px}
+main{max-width:1180px;margin:auto;padding:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin:10px 0}
+.title{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:10px}
+.pill{font-size:11px;background:#eee;color:#111;border-radius:999px;padding:4px 8px;font-weight:800}
+.decision{background:linear-gradient(180deg,#171717,#0d0d0d);border-radius:22px;padding:18px;border:1px solid var(--line)}
+.big{font-size:40px;font-weight:900;letter-spacing:1px}.wait{color:var(--y)}.entry{color:var(--g)}.notrade{color:var(--r)}
+.small{font-size:13px;color:var(--muted);line-height:1.45}
+.scorebar{height:12px;background:#242424;border-radius:999px;overflow:hidden;margin:12px 0 6px}
+.scorefill{height:100%;width:0%;background:var(--y);transition:.2s}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.monitor{border:1px solid var(--line);border-radius:12px;background:#101820;padding:14px;text-align:center;font-weight:800;text-decoration:none;color:var(--text)}
+.monitor span{display:block;color:var(--muted);font-size:11px;margin-top:8px;font-weight:600}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button,.btn{border:1px solid var(--line);background:#242424;color:var(--text);border-radius:12px;padding:13px 10px;font-weight:800;font-size:14px;cursor:pointer;text-align:center;text-decoration:none}
+button.active.green{background:#073b22;border-color:var(--g)}button.active.red{background:#3b0710;border-color:var(--r)}button.active.yellow{background:#3b3007;border-color:var(--y)}
+textarea,input{width:100%;background:#0b0b0b;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:900px;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;white-space:nowrap}
+th{color:#ddd;background:#101010;position:sticky;top:0}
+.command{position:fixed;left:8px;right:8px;bottom:8px;z-index:20;background:rgba(10,10,10,.94);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 -8px 30px rgba(0,0,0,.4)}
+.command-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.command button{font-size:12px;padding:10px 6px}
+.quick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:7px}.quick button{font-size:11px;padding:8px 4px}
+.green-btn{background:#073b22;border-color:var(--g)}.blue-btn{background:#0b2d52;border-color:var(--b)}.purple-btn{background:#2a1048;border-color:var(--p)}.orange-btn{background:#4b2b05;border-color:#f59e0b}
+.review{border-color:#3b1d6b;background:#12091f}
+@media(max-width:600px){.big{font-size:34px}.grid{grid-template-columns:1fr}.buttons{grid-template-columns:1fr 1fr}.command-grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr 1fr}}
 </style>
 </head>
 <body>
-<header><h1>⚔️ Guardian Time Engine Pro</h1><div class="sub">Mission Control: Regime → Bias → Intent → Zone → Trigger → Confirm → Entry</div></header>
+<header id="top"><h1>⚔️ Guardian Time Engine V3</h1><div class="sub">Sheet Sync Edition: Regime → Bias → Intent → Zone → Trigger → Confirm → Entry</div></header>
 <main>
-<section class="decision"><div class="small">FINAL DECISION</div><div id="final" class="big wait">WAIT</div><div id="dir" class="note">Direction: -</div><div id="note" class="note">Incomplete sequence. Wait for confirmation.</div><div class="scorebar"><div id="scorefill" class="scorefill"></div></div><div id="scoreText" class="small">Score: 0/6</div></section>
-<section class="card"><div class="title">🌐 Monitor Wall <span class="pill">Open Tabs</span></div><div class="links">
-<a class="btn" target="_blank" href="https://www.coinglass.com/pro/futures/LiquidationHeatMap">Coinglass Heatmap</a><a class="btn" target="_blank" href="https://www.coinglass.com/pro/futures/orderBook">Coinglass OBLD</a><a class="btn" target="_blank" href="https://www.tensorcharts.com/">TensorCharts</a><a class="btn" target="_blank" href="https://www.bybit.com/en/trade/spot/BTC/USDT">Bybit BTC</a><a class="btn" target="_blank" href="https://bookmap.com/">Bookmap</a><a class="btn" target="_blank" href="https://gammaflip.io/">GammaFlip</a><a class="btn" target="_blank" href="https://excel.cloud.microsoft/">Excel Journal</a><a class="btn" target="_blank" href="https://www.tradingview.com/chart/?symbol=BINANCE:BTCUSDT">TradingView</a>
-</div><div class="small">এই dashboard decision brain; sites আলাদা tab-এ খুলবে।</div></section>
-<div class="grid">
-<section class="card"><div class="title">1️⃣ Regime <span class="pill">WHAT</span></div><div class="buttons" data-key="regime"><button data-val="Trend" class="green">✓ Trend</button><button data-val="Range" class="yellow">Range</button><button data-val="Transition" class="blue">Transition</button><button data-val="No" class="red">✗ Unclear</button></div></section>
-<section class="card"><div class="title">2️⃣ Bias / PDI <span class="pill">DIRECTION</span></div><div class="buttons" data-key="bias"><button data-val="Bullish" class="green">✓ Bullish PDI</button><button data-val="Bearish" class="red">✓ Bearish PDI</button><button data-val="Absorption" class="yellow">Absorption</button><button data-val="No" class="red">✗ No Bias</button></div></section>
-<section class="card"><div class="title">3️⃣ Intent / Whale <span class="pill">WHO</span></div><div class="buttons" data-key="intent"><button data-val="Active" class="green">✓ Whale Active</button><button data-val="Trap" class="red">Trap</button><button data-val="Passive" class="yellow">Passive</button><button data-val="No" class="red">✗ Unclear</button></div></section>
-<section class="card"><div class="title">4️⃣ Zone <span class="pill">WHERE</span></div><div class="buttons" data-key="zone"><button data-val="Yes" class="green">✓ Valid Zone</button><button data-val="No" class="red">✗ No Zone</button><button data-val="Upper" class="yellow">Upper Cluster</button><button data-val="Lower" class="yellow">Lower Cluster</button></div></section>
-<section class="card"><div class="title">5️⃣ Trigger <span class="pill">WHEN</span></div><div class="buttons" data-key="trigger"><button data-val="Ready" class="green">✓ Kill→Next→Retest</button><button data-val="Wait" class="yellow">Wait Retest</button><button data-val="No" class="red">✗ No Trigger</button><button data-val="FOMO" class="red">🍆 FOMO</button></div></section>
-<section class="card"><div class="title">6️⃣ Confirm RVWDSL <span class="pill">FINAL</span></div><div class="buttons" data-key="confirm"><button data-val="GO" class="green">✓ ALL PASS</button><button data-val="NO TRADE" class="red">✗ 1 Fail</button></div><div class="small">R Regime • V VWAP/STD • W Whale • D OBLD/PDI • S Spoof • L TF Align</div></section>
-<section class="card"><div class="title">🐋 Whale Vision</div><div class="buttons" data-key="whale"><button data-val="Accumulating" class="green">Accumulating</button><button data-val="Distributing" class="red">Distributing</button><button data-val="Absorbing" class="yellow">Absorbing</button><button data-val="Trap Setup" class="red">Trap Setup</button></div></section>
-<section class="card"><div class="title">🧑 Retail Vision</div><div class="buttons" data-key="retail"><button data-val="FOMO Buy" class="green">FOMO Buy</button><button data-val="Panic Sell" class="red">Panic Sell</button><button data-val="Confused" class="yellow">Confused</button><button data-val="No Data" class="blue">No Data</button></div></section>
-<section class="card"><div class="title">💣 Options / Gamma <span class="pill">SUPPORT</span></div><div class="buttons" data-key="gamma"><button data-val="Aligned" class="green">Gamma + Heatmap Align</button><button data-val="Far" class="yellow">Far Zone</button><button data-val="Opposite" class="red">Opposite</button><button data-val="No Data" class="blue">No Data</button></div></section>
-<section class="card"><div class="title">🛡 Risk Lock</div><div class="row"><input id="risk" inputmode="decimal" placeholder="Risk % e.g. 0.5"><input id="rr" inputmode="decimal" placeholder="R:R e.g. 2"></div><div class="small" id="riskNote">Default Guardian rule: 0.5%–1% risk per trade.</div></section>
-</div>
-<section class="card" style="margin-top:10px"><div class="title">📝 Notes + Journal</div><textarea id="notes" placeholder="Coinglass heatmap / OBLD / Tensor spoof / Bybit VWAP / mistake note..."></textarea><div class="footer-actions"><button onclick="saveTrade()">Save to History</button><button onclick="sendToSheet()">Send to Google Sheet ⚔️</button><button onclick="copyRow()">Copy Journal Row</button><button onclick="exportCSV()">Export CSV</button><button onclick="resetAll()">Reset Live Setup</button></div><pre id="summary"></pre></section>
-<section class="card" style="margin-top:10px"><div class="title">📚 Saved History <span class="pill" id="histCount">0</span></div><div class="history"><table id="histTable"><thead><tr><th>Time</th><th>Decision</th><th>Dir</th><th>Regime</th><th>Bias</th><th>Whale</th></tr></thead><tbody></tbody></table></div></section>
+<section class="decision" id="decisionBox"><div class="small">FINAL DECISION</div><div id="final" class="big wait">WAIT</div><div id="dir" class="small">Direction: -</div><div id="note" class="small">Incomplete sequence. Wait for confirmation.</div><div class="scorebar"><div id="scorefill" class="scorefill"></div></div><div id="score" class="small">Score: 0/6</div></section>
+<section class="card" id="monitor"><div class="title">🖥️ Monitor Wall <button onclick="openTabs()" style="padding:7px 10px;font-size:12px">Open All</button></div><div class="monitor-grid">
+<a class="monitor" target="_blank" href="https://www.coinglass.com/pro/futures/LiquidationHeatMap">coinglass<span>Heatmap</span></a>
+<a class="monitor" target="_blank" href="https://www.coinglass.com/pro/futures/orderBook/LiquidationMap">coinglass<span>OBLD / Orderbook</span></a>
+<a class="monitor" target="_blank" href="https://www.tensorcharts.com/">TensorCharts<span>Spoof / SDL</span></a>
+<a class="monitor" target="_blank" href="https://www.bybit.com/trade/spot/BTC/USDT">BYBIT<span>BTC Chart</span></a>
+<a class="monitor" target="_blank" href="https://bookmap.com/">BOOKMAP<span>Liquidity</span></a>
+<a class="monitor" target="_blank" href="https://gammaflip.io/">GAMMAFLIP<span>Options</span></a>
+<a class="monitor" target="_blank" href="https://docs.google.com/spreadsheets/">Google Sheets<span>Journal DB</span></a>
+<a class="monitor" target="_blank" href="https://www.tradingview.com/chart/">TradingView<span>Chart</span></a>
+</div></section>
+<section class="grid" id="setup">
+<div class="card"><div class="title">1️⃣ Regime <span class="pill">WHAT</span></div><div class="buttons" data-key="regime"><button data-val="Trend">✓ Trend</button><button data-val="Range">Range</button><button data-val="Transition">Transition</button><button data-val="Unclear">✗ Unclear</button></div></div>
+<div class="card"><div class="title">2️⃣ Bias / PDI <span class="pill">DIRECTION</span></div><div class="buttons" data-key="bias"><button data-val="Bullish">✓ Bullish PDI</button><button data-val="Bearish">✓ Bearish PDI</button><button data-val="Absorption">Absorption</button><button data-val="No Bias">✗ No Bias</button></div></div>
+<div class="card"><div class="title">3️⃣ Intent / Whale <span class="pill">WHO</span></div><div class="buttons" data-key="intent"><button data-val="Active">✓ Whale Active</button><button data-val="Trap">Trap</button><button data-val="Passive">Passive</button><button data-val="Unclear">✗ Unclear</button></div></div>
+<div class="card"><div class="title">4️⃣ Zone <span class="pill">WHERE</span></div><div class="buttons" data-key="zone"><button data-val="Yes">✓ Valid Zone</button><button data-val="No">✗ No Zone</button><button data-val="Upper">Upper Cluster</button><button data-val="Lower">Lower Cluster</button></div></div>
+<div class="card"><div class="title">5️⃣ Trigger <span class="pill">WHEN</span></div><div class="buttons" data-key="trigger"><button data-val="Ready">✓ Kill → Next → Retest</button><button data-val="Wait Retest">Wait Retest</button><button data-val="No Trigger">✗ No Trigger</button><button data-val="FOMO">🍆 FOMO</button></div></div>
+<div class="card"><div class="title">6️⃣ Confirm RVWDSL <span class="pill">FINAL</span></div><div class="buttons" data-key="confirm"><button data-val="GO">✓ ALL PASS</button><button data-val="FAIL">✗ 1 Fail</button></div><div class="small">R Regime · V VWAP/STD · W Whale · D OBLD/PDI · S Spoof · L TF Align</div></div>
+<div class="card"><div class="title">🐋 Whale Vision</div><div class="buttons" data-key="whale"><button data-val="Accumulating">Accumulating</button><button data-val="Distributing">Distributing</button><button data-val="Absorbing">Absorbing</button><button data-val="Trap Setup">Trap Setup</button></div></div>
+<div class="card"><div class="title">🧑 Retail Vision</div><div class="buttons" data-key="retail"><button data-val="FOMO Buy">FOMO Buy</button><button data-val="Panic Sell">Panic Sell</button><button data-val="Confused">Confused</button><button data-val="No Data">No Data</button></div></div>
+<div class="card"><div class="title">🧭 Options / Gamma <span class="pill">SUPPORT</span></div><div class="buttons" data-key="gamma"><button data-val="Aligned">Gamma + Heatmap Align</button><button data-val="Far Zone">Far Zone</button><button data-val="Opposite">Opposite</button><button data-val="No Data">No Data</button></div></div>
+<div class="card"><div class="title">🛡️ Risk Lock</div><div class="row"><input id="risk" inputmode="decimal" placeholder="Risk % e.g. 0.5"><input id="rr" inputmode="decimal" placeholder="R:R e.g. 2"></div><div class="small">Default Guardian rule: 0.5%–1% risk per trade.</div></div>
+</section>
+<section class="card review" id="review"><div class="title">🔮 After Trade Review <span class="pill">LEVEL 2</span></div><div class="grid">
+<div><div class="small">Result</div><div class="buttons" data-key="result"><button data-val="Win">Win</button><button data-val="Loss">Loss</button><button data-val="BE">BE</button><button data-val="Pending">Pending</button></div></div>
+<div><div class="small">PnL</div><input id="pnl" placeholder="$ / % PnL"></div><div><div class="small">Screenshot Link</div><input id="screenshot" placeholder="Paste image / Drive link"></div><div><div class="small">Mistake Tag</div><input id="mistake" placeholder="e.g. FOMO / Late Entry / No Retest"></div>
+</div></section>
+<section class="card" id="journal"><div class="title">📝 Notes + Journal</div><textarea id="notes" rows="4" placeholder="Coinglass heatmap / OBLD / Tensor spoof / Bybit VWAP / mistake note..."></textarea><div class="table-wrap" style="margin-top:10px"><table><thead><tr id="rowHead"></tr></thead><tbody><tr id="liveRow"></tr></tbody></table></div></section>
+<section class="card" id="history"><div class="title">📚 Synced History <span id="histCount" class="pill">0</span></div><div class="table-wrap"><table><thead><tr><th>Time</th><th>Decision</th><th>Dir</th><th>Regime</th><th>Bias</th><th>Whale</th><th>Result</th><th>PnL</th></tr></thead><tbody id="histBody"></tbody></table></div><div class="small">Local history remains on this device. Google Sheet is your main database.</div></section>
+</main>
+<div class="command"><div class="command-grid"><button class="green-btn" onclick="sendToSheet()">💾 Save Sheet</button><button class="blue-btn" onclick="copyRow()">📋 Copy Row</button><button class="purple-btn" onclick="resetAll()">🧹 Reset</button><button class="orange-btn" onclick="exportCSV()">⬇️ CSV</button><button onclick="loadHistory()">🔄 Load</button></div><div class="quick"><button onclick="go('top')">⬆️ Top</button><button onclick="go('decisionBox')">🎯 Decision</button><button onclick="go('monitor')">🖥️ Wall</button><button onclick="go('setup')">1️⃣ Setup</button><button onclick="go('journal')">📝 Journal</button><button onclick="go('history')">📊 History</button></div></div>
 <script>
-const state={regime:null,bias:null,intent:null,zone:null,trigger:null,confirm:null,whale:null,retail:null,gamma:null};let lastRow="";const historyKey="guardian_time_engine_history_v1";
-document.querySelectorAll(".buttons").forEach(g=>g.addEventListener("click",e=>{if(e.target.tagName!=="BUTTON")return;const k=g.dataset.key;state[k]=e.target.dataset.val;[...g.children].forEach(b=>b.classList.remove("active"));e.target.classList.add("active");decide();}));
-["notes","risk","rr"].forEach(id=>document.getElementById(id).addEventListener("input",decide));
-function score(){let s=0;if(state.regime&&state.regime!=="No")s++;if(state.bias&&state.bias!=="No")s++;if(state.intent&&state.intent!=="No")s++;if(state.zone&&state.zone!=="No")s++;if(state.trigger==="Ready")s++;if(state.confirm==="GO")s++;return s;}
-function decide(){let final="WAIT",cls="wait",dir="-",note="Incomplete sequence. Wait for confirmation.";const zoneOK=["Yes","Upper","Lower"].includes(state.zone),triggerOK=state.trigger==="Ready",confirmOK=state.confirm==="GO";const block=state.trigger==="FOMO"||state.confirm==="NO TRADE"||state.zone==="No"||state.regime==="No"||state.bias==="No";const risk=parseFloat(document.getElementById("risk").value||""),rr=parseFloat(document.getElementById("rr").value||"");
-if(block){final="NO TRADE";cls="bad";note="No trade; protect capital. Trigger ছাড়া entry = তুমি তরকারি 🍆";}
-else if(zoneOK&&triggerOK&&confirmOK&&state.bias&&state.intent){final="ENTRY";cls="ok";dir=state.bias==="Bullish"?"LONG":state.bias==="Bearish"?"SHORT":"WAIT / SCALP ONLY";note="System allows entry. Risk first, profit second."}
-if(state.regime==="Range"&&state.bias==="Absorption")note+=" Range + absorption: retest ছাড়া entry no.";if(state.whale==="Accumulating"&&state.retail==="Panic Sell"){if(dir==="-")dir="LONG BIAS";note+=" Whale buys while retail panics."}if(state.whale==="Distributing"&&state.retail==="FOMO Buy"){if(dir==="-")dir="SHORT BIAS";note+=" Whale sells while retail FOMOs."}if(state.gamma==="Aligned")note+=" Gamma/heatmap adds reaction-zone confidence, not direct entry.";if(!isNaN(risk)&&risk>1){final="NO TRADE";cls="bad";note="Risk > 1% blocked by Guardian risk lock."}if(!isNaN(rr)&&rr<1.5&&final==="ENTRY"){final="WAIT";cls="wait";note="R:R weak. Wait for better entry/retest."}
-const f=document.getElementById("final");f.textContent=final;f.className="big "+cls;document.getElementById("dir").textContent="Direction: "+dir;document.getElementById("note").textContent=note;const sc=score(),pct=Math.round(sc/6*100);const fill=document.getElementById("scorefill");fill.style.width=pct+"%";fill.style.background=pct>=84?"var(--g)":pct>=50?"var(--y)":"var(--r)";document.getElementById("scoreText").textContent=`Score: ${sc}/6`;document.getElementById("riskNote").textContent=(!isNaN(risk)&&risk>1)?"Risk too high. Guardian blocks trade.":"Default Guardian rule: 0.5%–1% risk per trade.";updateSummary();}
-function makeRow(){const notes=document.getElementById("notes").value.replace(/\n/g," "),risk=document.getElementById("risk").value||"-",rr=document.getElementById("rr").value||"-";return [new Date().toLocaleString(),state.regime||"-",state.bias||"-",state.intent||"-",state.zone||"-",state.trigger||"-",state.confirm||"-",state.whale||"-",state.retail||"-",state.gamma||"-",risk,rr,document.getElementById("final").textContent,document.getElementById("dir").textContent.replace("Direction: ",""),notes];}
-function updateSummary(){const header="Time\tRegime\tBias\tIntent\tZone\tTrigger\tConfirm\tWhale\tRetail\tGamma\tRisk%\tRR\tDecision\tDirection\tNotes";lastRow=makeRow().join("\t");document.getElementById("summary").textContent=header+"\n"+lastRow;}
-function copyRow(){updateSummary();navigator.clipboard.writeText(lastRow);alert("Journal row copied. Paste into Excel/Google Sheet.");}
-function loadHistory(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");const tbody=document.querySelector("#histTable tbody");tbody.innerHTML="";rows.slice().reverse().forEach(r=>{const tr=document.createElement("tr");[r[0],r[12],r[13],r[1],r[2],r[7]].forEach(x=>{const td=document.createElement("td");td.textContent=x;tr.appendChild(td)});tbody.appendChild(tr)});document.getElementById("histCount").textContent=rows.length;}
-function saveTrade(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");rows.push(makeRow());localStorage.setItem(historyKey,JSON.stringify(rows));loadHistory();alert("Saved to local history.");}
-function exportCSV(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");const header=["Time","Regime","Bias","Intent","Zone","Trigger","Confirm","Whale","Retail","Gamma","Risk%","RR","Decision","Direction","Notes"];const csv=[header,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="guardian_trade_history.csv";a.click();}
-
-function sendToSheet(){
-  const data = {
-    regime: state.regime || "-",
-    bias: state.bias || "-",
-    intent: state.intent || "-",
-    zone: state.zone || "-",
-    trigger: state.trigger || "-",
-    confirm: state.confirm || "-",
-    whale: state.whale || "-",
-    retail: state.retail || "-",
-    gamma: state.gamma || "-",
-    risk: document.getElementById("risk").value || "-",
-    rr: document.getElementById("rr").value || "-",
-    decision: document.getElementById("final").textContent,
-    direction: document.getElementById("dir").textContent.replace("Direction: ",""),
-    notes: document.getElementById("notes").value || "-"
-  };
-
-  fetch("https://script.google.com/macros/s/AKfycbxk9l1BVOqDnOq3vfzOuhjqK-LsPtAQQ3esS8WFsvVmYTFc8zESuXP_JHgCVWpGUIzg/exec", {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify(data)
-  });
-
-  saveTrade();
-  alert("Sent to Google Sheet ⚔️");
-}
-
-function resetAll(){Object.keys(state).forEach(k=>state[k]=null);document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));document.getElementById("notes").value="";document.getElementById("risk").value="";document.getElementById("rr").value="";decide();}
-loadHistory();decide();
-</script></main></body></html>
+const API_URL = "https://script.google.com/macros/s/AKfycbxk9l1BVOqDnOq3vfzOuhjqK-LsPtAQQ3esS8WFsvVmYTFc8zESuXP_JHgCVWpGUIzg/exec";
+const headers = ["Time","Regime","Bias","Intent","Zone","Trigger","Confirm","Whale","Retail","Gamma","Risk%","RR","Decision","Direction","Notes","Result","PnL","Screenshot","Mistake"];
+const state = {regime:null,bias:null,intent:null,zone:null,trigger:null,confirm:null,whale:null,retail:null,gamma:null,result:null};
+const historyKey = "guardian_v3_history";
+document.getElementById("rowHead").innerHTML = headers.map(h=>`<th>${h}</th>`).join("");
+document.querySelectorAll(".buttons").forEach(group=>{group.addEventListener("click", e=>{if(e.target.tagName!=="BUTTON")return;const key=group.dataset.key;state[key]=e.target.dataset.val;group.querySelectorAll("button").forEach(b=>b.classList.remove("active","green","red","yellow"));e.target.classList.add("active");const val=e.target.dataset.val;if(["No","FAIL","No Bias","Unclear","No Trigger","FOMO","Loss"].includes(val))e.target.classList.add("red");else if(["Upper","Lower","Absorption","Absorbing","Confused","BE","Wait Retest","Far Zone","Opposite"].includes(val))e.target.classList.add("yellow");else e.target.classList.add("green");decide();});});
+["risk","rr","notes","pnl","screenshot","mistake"].forEach(id=>{document.getElementById(id).addEventListener("input",decide);});
+function scoreCore(){let checks=0;if(["Trend","Range","Transition"].includes(state.regime))checks++;if(["Bullish","Bearish","Absorption"].includes(state.bias))checks++;if(state.intent==="Active")checks++;if(["Yes","Upper","Lower"].includes(state.zone))checks++;if(state.trigger==="Ready")checks++;if(state.confirm==="GO")checks++;return checks;}
+function decide(){const s=scoreCore();let final="WAIT",cls="wait",dir="-",note="Incomplete sequence. Wait for confirmation.";const zoneOK=["Yes","Upper","Lower"].includes(state.zone);const biasOK=["Bullish","Bearish","Absorption"].includes(state.bias);if(state.confirm==="FAIL"||state.zone==="No"||state.trigger==="No Trigger"||state.trigger==="FOMO"||state.bias==="No Bias"||state.regime==="Unclear"){final="NO TRADE";cls="notrade";note="Rule failed. Protect capital. Trigger ছাড়া entry = তুমি তরকারি 🍆";}else if(s===6&&zoneOK&&state.trigger==="Ready"&&state.confirm==="GO"&&biasOK){final="ENTRY";cls="entry";if(state.bias==="Bullish")dir="LONG";else if(state.bias==="Bearish")dir="SHORT";else dir="WAIT / SCALP ONLY";note="System allows entry. Risk first, profit second. Patience + discipline = gift of Guardian.";}else if(state.gamma==="Aligned"&&s>=4){note="Gamma/heatmap adds reaction-zone confidence, not direct entry.";}const f=document.getElementById("final");f.textContent=final;f.className="big "+cls;document.getElementById("dir").textContent="Direction: "+dir;document.getElementById("note").textContent=note;document.getElementById("score").textContent=`Score: ${s}/6`;document.getElementById("scorefill").style.width=(s/6*100)+"%";document.getElementById("scorefill").style.background=final==="ENTRY"?"var(--g)":final==="NO TRADE"?"var(--r)":"var(--y)";updateRow();}
+function currentData(){return{time:new Date().toLocaleString(),regime:state.regime||"-",bias:state.bias||"-",intent:state.intent||"-",zone:state.zone||"-",trigger:state.trigger||"-",confirm:state.confirm||"-",whale:state.whale||"-",retail:state.retail||"-",gamma:state.gamma||"-",risk:document.getElementById("risk").value||"-",rr:document.getElementById("rr").value||"-",decision:document.getElementById("final").textContent,direction:document.getElementById("dir").textContent.replace("Direction: ",""),notes:document.getElementById("notes").value||"-",result:state.result||"-",pnl:document.getElementById("pnl").value||"-",screenshot:document.getElementById("screenshot").value||"-",mistake:document.getElementById("mistake").value||"-"};}
+function updateRow(){const d=currentData();const vals=[d.time,d.regime,d.bias,d.intent,d.zone,d.trigger,d.confirm,d.whale,d.retail,d.gamma,d.risk,d.rr,d.decision,d.direction,d.notes,d.result,d.pnl,d.screenshot,d.mistake];document.getElementById("liveRow").innerHTML=vals.map(v=>`<td>${String(v).replace(/</g,"&lt;")}</td>`).join("");}
+function sendToSheet(){const d=currentData();fetch(API_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(d)});saveLocal(false);alert("Sent to Google Sheet ⚔️");}
+function saveLocal(show=true){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");rows.unshift(currentData());localStorage.setItem(historyKey,JSON.stringify(rows.slice(0,100)));loadHistory();if(show)alert("Saved to local history.");}
+function loadHistory(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");document.getElementById("histCount").textContent=rows.length;document.getElementById("histBody").innerHTML=rows.map(r=>`<tr><td>${r.time}</td><td>${r.decision}</td><td>${r.direction}</td><td>${r.regime}</td><td>${r.bias}</td><td>${r.whale}</td><td>${r.result||"-"}</td><td>${r.pnl||"-"}</td></tr>`).join("");}
+function copyRow(){const d=currentData();const vals=[d.time,d.regime,d.bias,d.intent,d.zone,d.trigger,d.confirm,d.whale,d.retail,d.gamma,d.risk,d.rr,d.decision,d.direction,d.notes,d.result,d.pnl,d.screenshot,d.mistake];navigator.clipboard.writeText(vals.join("\\t"));alert("Journal row copied.");}
+function exportCSV(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");const csv=[headers.join(","),...rows.map(r=>[r.time,r.regime,r.bias,r.intent,r.zone,r.trigger,r.confirm,r.whale,r.retail,r.gamma,r.risk,r.rr,r.decision,r.direction,r.notes,r.result,r.pnl,r.screenshot,r.mistake].map(x=>`"${String(x||"").replace(/"/g,'""')}"`).join(","))].join("\\n");const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="guardian_time_engine_v3.csv";a.click();}
+function resetAll(){Object.keys(state).forEach(k=>state[k]=null);document.querySelectorAll("button").forEach(b=>b.classList.remove("active","green","red","yellow"));["risk","rr","notes","pnl","screenshot","mistake"].forEach(id=>document.getElementById(id).value="");decide();}
+function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth",block:"start"});}
+function openTabs(){["https://www.coinglass.com/pro/futures/LiquidationHeatMap","https://www.tensorcharts.com/","https://www.bybit.com/trade/spot/BTC/USDT","https://bookmap.com/","https://gammaflip.io/","https://docs.google.com/spreadsheets/"].forEach(u=>window.open(u,"_blank"));}
+decide();loadHistory();
+</script>
+</body></html>
