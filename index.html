@@ -20,7 +20,7 @@ button.active.yellow{background:rgba(255,209,102,.25);border-color:var(--y)}butt
 textarea,input{width:100%;background:#0b0b0b;color:var(--text);border:1px solid var(--line);border-radius:13px;padding:10px;font-size:14px}textarea{min-height:82px}
 pre{white-space:pre-wrap;background:#050505;border:1px solid var(--line);border-radius:13px;padding:10px;font-size:12px;max-height:180px;overflow:auto}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.history{max-height:260px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:7px;text-align:left}
-.footer-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.footer-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -42,7 +42,7 @@ pre{white-space:pre-wrap;background:#050505;border:1px solid var(--line);border-
 <section class="card"><div class="title">💣 Options / Gamma <span class="pill">SUPPORT</span></div><div class="buttons" data-key="gamma"><button data-val="Aligned" class="green">Gamma + Heatmap Align</button><button data-val="Far" class="yellow">Far Zone</button><button data-val="Opposite" class="red">Opposite</button><button data-val="No Data" class="blue">No Data</button></div></section>
 <section class="card"><div class="title">🛡 Risk Lock</div><div class="row"><input id="risk" inputmode="decimal" placeholder="Risk % e.g. 0.5"><input id="rr" inputmode="decimal" placeholder="R:R e.g. 2"></div><div class="small" id="riskNote">Default Guardian rule: 0.5%–1% risk per trade.</div></section>
 </div>
-<section class="card" style="margin-top:10px"><div class="title">📝 Notes + Journal</div><textarea id="notes" placeholder="Coinglass heatmap / OBLD / Tensor spoof / Bybit VWAP / mistake note..."></textarea><div class="footer-actions"><button onclick="saveTrade()">Save to History</button><button onclick="copyRow()">Copy Journal Row</button><button onclick="exportCSV()">Export CSV</button><button onclick="resetAll()">Reset Live Setup</button></div><pre id="summary"></pre></section>
+<section class="card" style="margin-top:10px"><div class="title">📝 Notes + Journal</div><textarea id="notes" placeholder="Coinglass heatmap / OBLD / Tensor spoof / Bybit VWAP / mistake note..."></textarea><div class="footer-actions"><button onclick="saveTrade()">Save to History</button><button onclick="sendToSheet()">Send to Google Sheet ⚔️</button><button onclick="copyRow()">Copy Journal Row</button><button onclick="exportCSV()">Export CSV</button><button onclick="resetAll()">Reset Live Setup</button></div><pre id="summary"></pre></section>
 <section class="card" style="margin-top:10px"><div class="title">📚 Saved History <span class="pill" id="histCount">0</span></div><div class="history"><table id="histTable"><thead><tr><th>Time</th><th>Decision</th><th>Dir</th><th>Regime</th><th>Bias</th><th>Whale</th></tr></thead><tbody></tbody></table></div></section>
 <script>
 const state={regime:null,bias:null,intent:null,zone:null,trigger:null,confirm:null,whale:null,retail:null,gamma:null};let lastRow="";const historyKey="guardian_time_engine_history_v1";
@@ -60,6 +60,35 @@ function copyRow(){updateSummary();navigator.clipboard.writeText(lastRow);alert(
 function loadHistory(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");const tbody=document.querySelector("#histTable tbody");tbody.innerHTML="";rows.slice().reverse().forEach(r=>{const tr=document.createElement("tr");[r[0],r[12],r[13],r[1],r[2],r[7]].forEach(x=>{const td=document.createElement("td");td.textContent=x;tr.appendChild(td)});tbody.appendChild(tr)});document.getElementById("histCount").textContent=rows.length;}
 function saveTrade(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");rows.push(makeRow());localStorage.setItem(historyKey,JSON.stringify(rows));loadHistory();alert("Saved to local history.");}
 function exportCSV(){const rows=JSON.parse(localStorage.getItem(historyKey)||"[]");const header=["Time","Regime","Bias","Intent","Zone","Trigger","Confirm","Whale","Retail","Gamma","Risk%","RR","Decision","Direction","Notes"];const csv=[header,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="guardian_trade_history.csv";a.click();}
+
+function sendToSheet(){
+  const data = {
+    regime: state.regime || "-",
+    bias: state.bias || "-",
+    intent: state.intent || "-",
+    zone: state.zone || "-",
+    trigger: state.trigger || "-",
+    confirm: state.confirm || "-",
+    whale: state.whale || "-",
+    retail: state.retail || "-",
+    gamma: state.gamma || "-",
+    risk: document.getElementById("risk").value || "-",
+    rr: document.getElementById("rr").value || "-",
+    decision: document.getElementById("final").textContent,
+    direction: document.getElementById("dir").textContent.replace("Direction: ",""),
+    notes: document.getElementById("notes").value || "-"
+  };
+
+  fetch("https://script.google.com/macros/s/AKfycbxk9l1BVOqDnOq3vfzOuhjqK-LsPtAQQ3esS8WFsvVmYTFc8zESuXP_JHgCVWpGUIzg/exec", {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify(data)
+  });
+
+  saveTrade();
+  alert("Sent to Google Sheet ⚔️");
+}
+
 function resetAll(){Object.keys(state).forEach(k=>state[k]=null);document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));document.getElementById("notes").value="";document.getElementById("risk").value="";document.getElementById("rr").value="";decide();}
 loadHistory();decide();
 </script></main></body></html>
