@@ -1,222 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Guardian Time Engine V4</title>
-<style>
-:root{--bg:#050505;--card:#151515;--btn:#242424;--line:#2b2b2b;--text:#f7f7f7;--muted:#999;--green:#19c37d;--red:#ff4d4d;--yellow:#ffd166;--blue:#4ea1ff;--purple:#7b2cff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;padding-bottom:90px}
-header{position:sticky;top:0;z-index:10;background:#050505;padding:12px;border-bottom:1px solid var(--line)}
-h1{font-size:18px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:4px}
-main{padding:10px;max-width:1150px;margin:auto}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-.big{font-size:42px;font-weight:900}.wait{color:var(--yellow)}.entry{color:var(--green)}.no{color:var(--red)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
-.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-button,a.btn{background:var(--btn);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;font-weight:700;text-decoration:none}
-button.active{background:#06351f;border-color:var(--green)}
-button.red{background:#3a1010;border-color:var(--red)}
-button.yellow{background:#3b310f;border-color:var(--yellow)}
-.monitor{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
-.monitor a{background:#07121a;border:1px solid #123;color:white;border-radius:12px;padding:16px;text-align:center;text-decoration:none;font-weight:800}
-input,textarea{width:100%;background:#050505;color:white;border:1px solid var(--line);border-radius:10px;padding:12px}
-textarea{min-height:85px}
-table{width:100%;border-collapse:collapse;font-size:11px}td,th{border-bottom:1px solid var(--line);padding:7px;text-align:left;color:#ddd}
-.sticky{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(--line);padding:8px;z-index:20;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.sticky button{font-size:12px;padding:10px 4px}
-.progress{height:10px;background:#222;border-radius:10px;overflow:hidden;margin:10px 0}.bar{height:100%;width:0;background:var(--yellow)}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guardian Crypto Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <main class="app">
+    <h1>Guardian Crypto Dashboard</h1>
+    <p class="subtitle">Track BTC, ETH, and crypto market signals.</p>
 
-<header>
-<h1>⚔️ Guardian Time Engine V4</h1>
-<div class="sub">Mission Control: Regime → Bias → Intent → Zone → Trigger → Confirm → Entry</div>
-</header>
+    <section class="cards">
+      <div class="card">
+        <h2>Bitcoin</h2>
+        <p id="btc-price">Loading...</p>
+      </div>
 
-<main>
+      <div class="card">
+        <h2>Ethereum</h2>
+        <p id="eth-price">Loading...</p>
+      </div>
 
-<section id="decision" class="card">
-<div class="sub">FINAL DECISION</div>
-<div id="final" class="big wait">WAIT</div>
-<div>Direction: <span id="dir">-</span></div>
-<div id="note" class="sub">Incomplete sequence. Wait for confirmation.</div>
-<div class="progress"><div id="bar" class="bar"></div></div>
-<div class="sub">Score: <span id="score">0/6</span></div>
-</section>
+      <div class="card">
+        <h2>Guardian Signal</h2>
+        <p id="signal">Waiting for data...</p>
+      </div>
+    </section>
 
-<section id="wall" class="card">
-<b>🖥️ Monitor Wall</b>
-<div class="monitor" style="margin-top:10px">
-<a target="_blank" href="https://www.coinglass.com/pro/futures/LiquidationHeatMap">Coinglass Heatmap</a>
-<a target="_blank" href="https://www.coinglass.com/pro/futures/orderbook">Coinglass OBLD</a>
-<a target="_blank" href="https://www.tensorcharts.com/">TensorCharts</a>
-<a target="_blank" href="https://www.bybit.com/trade/usdt/BTCUSDT">Bybit BTC</a>
-<a target="_blank" href="https://www.bookmap.com/">Bookmap</a>
-<a target="_blank" href="https://gammaflip.io/">GammaFlip</a>
-<a target="_blank" href="https://docs.google.com/spreadsheets/">Google Sheets</a>
-<a target="_blank" href="https://www.tradingview.com/chart/">TradingView</a>
-</div>
-</section>
+    <button onclick="loadPrices()">Refresh Prices</button>
+  </main>
 
-<div id="setup" class="grid"></div>
-
-<section id="journal" class="card">
-<b>📝 Notes + Journal</b><br><br>
-<textarea id="notes" placeholder="Coinglass / OBLD / Tensor / Bybit / mistake note..."></textarea>
-<br><br>
-<div class="grid">
-<input id="risk" placeholder="Risk % e.g. 0.5">
-<input id="rr" placeholder="R:R e.g. 2">
-<input id="pnl" placeholder="PnL / Result">
-<input id="shot" placeholder="Screenshot / Drive link">
-</div>
-<br>
-<div class="grid">
-<button onclick="saveHistory()">💾 Save Local</button>
-<button onclick="sendToSheet()">📤 Send Google Sheet</button>
-<button onclick="copyRow()">📋 Copy Row</button>
-<button onclick="exportCSV()">⬇️ Export CSV</button>
-</div>
-</section>
-
-<section id="history" class="card">
-<b>📚 Saved History</b>
-<table>
-<thead><tr><th>Time</th><th>Decision</th><th>Dir</th><th>Regime</th><th>Bias</th><th>Whale</th><th>Notes</th></tr></thead>
-<tbody id="hist"></tbody>
-</table>
-</section>
-
-</main>
-
-<div class="sticky">
-<button onclick="go('decision')">🎯 Decision</button>
-<button onclick="go('wall')">🖥️ Wall</button>
-<button onclick="go('setup')">1️⃣ Setup</button>
-<button onclick="go('journal')">📝 Journal</button>
-<button onclick="go('history')">📚 History</button>
-<button onclick="resetAll()">♻️ Reset</button>
-</div>
-
-<script>
-const SHEET_URL="https://script.google.com/macros/s/AKfycbxk9l1BVOqDnOq3vfzOuhjqK-LsPtAQQ3esS8WFsvVmYTFc8zESuXP_JHgCVWpGUIzg/exec";
-
-const groups=[
-["regime","1️⃣ Regime","WHAT",["Trend","Range","Transition","Unclear"]],
-["bias","2️⃣ Bias / PDI","DIRECTION",["Bullish PDI","Bearish PDI","Absorption","No Bias"]],
-["intent","3️⃣ Intent / Whale","WHO",["Whale Active","Trap","Passive","Unclear"]],
-["zone","4️⃣ Zone","WHERE",["Valid Zone","No Zone","Upper Cluster","Lower Cluster"]],
-["trigger","5️⃣ Trigger","WHEN",["Kill → Next → Retest","Wait Retest","No Trigger","FOMO"]],
-["confirm","6️⃣ Confirm RVWDSL","FINAL",["ALL PASS","1 Fail"]],
-["whale","🐋 Whale Vision","",["Accumulating","Distributing","Absorbing","Trap Setup"]],
-["retail","🙉 Retail Vision","",["FOMO Buy","Panic Sell","Confused","No Data"]],
-["gamma","🎯 Options / Gamma","SUPPORT",["Gamma + Heatmap Align","Far Zone","Opposite","No Data"]],
-["result","🧾 After Trade Review","",["Win","Loss","BE","Pending"]]
-];
-
-let state=JSON.parse(localStorage.getItem("gte_v4_state")||"{}");
-let history=JSON.parse(localStorage.getItem("gte_v4_history")||"[]");
-
-function build(){
- const box=document.getElementById("setup");
- groups.forEach(g=>{
-  const card=document.createElement("section");
-  card.className="card";
-  card.innerHTML=`<b>${g[1]} <span class="sub">${g[2]}</span></b><br><br><div class="buttons"></div>`;
-  const btns=card.querySelector(".buttons");
-  g[3].forEach(v=>{
-   const b=document.createElement("button");
-   b.textContent=(state[g[0]]===v?"✓ ":"")+v;
-   if(state[g[0]]===v)b.className="active";
-   if(v==="No Zone"||v==="1 Fail"||v==="Loss")b.classList.add("red");
-   if(v==="Upper Cluster"||v==="Lower Cluster"||v==="Absorbing"||v==="Confused")b.classList.add("yellow");
-   b.onclick=()=>{state[g[0]]=v;saveState();build();decide();}
-   btns.appendChild(b);
-  });
-  box.appendChild(card);
- });
-}
-
-function saveState(){localStorage.setItem("gte_v4_state",JSON.stringify(state));}
-function decide(){
- let score=0;
- if(state.regime==="Trend"||state.regime==="Range")score++;
- if(state.bias==="Bullish PDI"||state.bias==="Bearish PDI"||state.bias==="Absorption")score++;
- if(state.intent==="Whale Active")score++;
- if(state.zone==="Valid Zone"||state.zone==="Upper Cluster"||state.zone==="Lower Cluster")score++;
- if(state.trigger==="Kill → Next → Retest")score++;
- if(state.confirm==="ALL PASS")score++;
-
- let final="WAIT",dir="-",note="Incomplete sequence. Wait for confirmation.",cls="wait";
- if(score>=6 && state.bias==="Bullish PDI"){final="ENTRY";dir="LONG";note="System allows LONG. Risk first, profit second.";cls="entry";}
- else if(score>=6 && state.bias==="Bearish PDI"){final="ENTRY";dir="SHORT";note="System allows SHORT. Risk first, profit second.";cls="entry";}
- else if(state.zone==="No Zone"||state.confirm==="1 Fail"||state.trigger==="FOMO"){final="NO TRADE";dir="-";note="Guardian block: no entry. Avoid emotional trade.";cls="no";}
- else if(score>=5){final="WAIT";dir="WAIT / SCALP ONLY";note="Almost ready. Need final confirmation.";cls="wait";}
-
- document.getElementById("final").textContent=final;
- document.getElementById("final").className="big "+cls;
- document.getElementById("dir").textContent=dir;
- document.getElementById("note").textContent=note;
- document.getElementById("score").textContent=score+"/6";
- document.getElementById("bar").style.width=(score/6*100)+"%";
- document.getElementById("bar").style.background=final==="ENTRY"?"var(--green)":final==="NO TRADE"?"var(--red)":"var(--yellow)";
- return {final,dir,score,note};
-}
-
-function row(){
- const d=decide();
- return {
-  time:new Date().toLocaleString(),
-  regime:state.regime||"-",bias:state.bias||"-",intent:state.intent||"-",zone:state.zone||"-",
-  trigger:state.trigger||"-",confirm:state.confirm||"-",whale:state.whale||"-",retail:state.retail||"-",
-  gamma:state.gamma||"-",risk:document.getElementById("risk").value||"-",rr:document.getElementById("rr").value||"-",
-  decision:d.final,direction:d.dir,notes:document.getElementById("notes").value||"-",
-  result:state.result||"-",pnl:document.getElementById("pnl").value||"-",screenshot:document.getElementById("shot").value||"-"
- };
-}
-
-function saveHistory(){
- const r=row();history.unshift(r);localStorage.setItem("gte_v4_history",JSON.stringify(history));loadHistory();alert("Saved locally ⚔️");
-}
-
-function loadHistory(){
- const body=document.getElementById("hist");body.innerHTML="";
- history.forEach(r=>{
-  body.innerHTML+=`<tr><td>${r.time}</td><td>${r.decision}</td><td>${r.direction}</td><td>${r.regime}</td><td>${r.bias}</td><td>${r.whale}</td><td>${r.notes}</td></tr>`;
- });
-}
-
-function sendToSheet(){
- const data=row();
- fetch(SHEET_URL,{method:"POST",body:JSON.stringify(data)})
- .then(r=>r.text()).then(()=>alert("Saved to Google Sheet ⚔️"))
- .catch(()=>alert("Sheet error ❌ Check Apps Script deploy permission"));
-}
-
-function copyRow(){
- const r=row();
- const text=Object.values(r).join(" | ");
- navigator.clipboard.writeText(text);
- alert("Copied journal row");
-}
-
-function exportCSV(){
- const keys=["time","regime","bias","intent","zone","trigger","confirm","whale","retail","gamma","risk","rr","decision","direction","notes","result","pnl","screenshot"];
- const csv=[keys.join(",")].concat(history.map(r=>keys.map(k=>`"${(r[k]||"").toString().replaceAll('"','""')}"`).join(","))).join("\n");
- const a=document.createElement("a");
- a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
- a.download="guardian_v4_history.csv";
- a.click();
-}
-
-function resetAll(){
- state={};saveState();document.getElementById("setup").innerHTML="";build();decide();
-}
-function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"});}
-
-build();decide();loadHistory();
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
