@@ -1,0 +1,13 @@
+{
+  "name": "guardian-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Guardian live dashboard backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
