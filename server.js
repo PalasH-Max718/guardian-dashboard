@@ -18,7 +18,7 @@ app.get("/health", (req, res) => {
 app.get("/api/btc", async (req, res) => {
   try {
     const response = await fetch(
-      "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT"
+      "https://api.bytick.com/v5/market/tickers?category=linear&symbol=BTCUSDT"
     );
 
     const data = await response.json();
