@@ -226,11 +226,26 @@ app.post("/api/guardian/btc", async (req, res) => {
   try {
 
     const btcResponse = await fetch(
-      "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT"
-    );
+  "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT",
+  {
+    headers: {
+      "Accept": "application/json",
+      "User-Agent": "Guardian-Dashboard"
+    }
+  }
+);
 
-    const btcData = await btcResponse.json();
+const raw = await btcResponse.text();
 
+let btcData;
+
+try {
+  btcData = JSON.parse(raw);
+} catch (parseError) {
+  throw new Error(
+    `Bybit invalid JSON: ${parseError.message} | Raw: ${raw.slice(0, 200)}`
+  );
+}
     const ticker = btcData?.result?.list?.[0];
 
 
