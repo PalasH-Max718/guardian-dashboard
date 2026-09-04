@@ -7,10 +7,9 @@ const PORT = process.env.PORT || 10000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-
-// ==========================
-// 1. HEALTH CHECK
-// ==========================
+// ========================================
+// 1. HEALTH
+// ========================================
 
 app.get("/health", (req, res) => {
   res.json({
@@ -20,307 +19,277 @@ app.get("/health", (req, res) => {
   });
 });
 
+// ========================================
+// Helper: safe fetch JSON
+// ========================================
 
-// ==========================
-// 2. BYBIT BTC LIVE DATA
-// ==========================
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  const raw = await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      `HTTP ${response.status} from ${url} | ${raw.slice(0, 300)}`
+    );
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new Error(
+      `Invalid JSON from ${url}: ${error.message} | Raw: ${raw.slice(0, 300)}`
+    );
+  }
+}
+
+// ========================================
+// Helper: Bybit BTC ticker
+// ========================================
+
+async function getBtcTicker() {
+  const urls = [
+    "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT",
+    "https://api.bytick.com/v5/market/tickers?category=linear&symbol=BTCUSDT"
+  ];
+
+  let lastError = null;
+
+  for (const url of urls) {
+    try {
+      const data = await fetchJson(url, {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "Guardian-Dashboard/1.0"
+        }
+      });
+
+      if (data?.retCode !== 0) {
+        throw new Error(
+          `Bybit retCode ${data?.retCode}: ${data?.retMsg || "Unknown error"}`
+        );
+      }
+
+      const ticker = data?.result?.list?.[0];
+
+      if (!ticker) {
+        throw new Error("BTCUSDT ticker missing in Bybit response");
+      }
+
+      return ticker;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("Unable to fetch BTCUSDT ticker");
+}
+
+// ========================================
+// 2. BTC LIVE DATA
+// ========================================
 
 app.get("/api/btc", async (req, res) => {
   try {
-
-    const response = await fetch(
-      "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT"
-    );
-
-    const data = await response.json();
-
-    const ticker = data?.result?.list?.[0];
-
-    if (!ticker) {
-      throw new Error("Bybit ticker unavailable");
-    }
-
-    res.json({
-      source: "Bybit",
-      symbol: "BTCUSDT",
-      price: ticker.lastPrice || null,
-      markPrice: ticker.markPrice || null,
-      indexPrice: ticker.indexPrice || null,
-      change24h: ticker.price24hPcnt || null,
-      high24h: ticker.highPrice24h || null,
-      low24h: ticker.lowPrice24h || null,
-      volume24h: ticker.volume24h || null,
-      turnover24h: ticker.turnover24h || null,
-      serverTime: new Date().toISOString()
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      error: "Unable to fetch Bybit BTC data",
-      message: error.message
-    });
-
-  }
-});
-
-
-// ==========================
-// 3. GUARDIAN AI
-// ==========================
-
-app.post("/api/guardian", async (req, res) => {
-
-  try {
-
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: "OPENAI_API_KEY is missing"
-      });
-    }
-
-    const {
-      message,
-      context = {},
-      marketData = {}
-    } = req.body || {};
-
-
-    if (!message) {
-      return res.status(400).json({
-        error: "message is required"
-      });
-    }
-
-
-    const guardianInstructions = `
-You are Guardian, a trading-analysis assistant.
-
-Use this hierarchy:
-
-1. CONTEXT FIRST
-Session + Regime + Structure + Location + Last Liquidity Event
-SRSLL.
-
-2. Then 1-minute Hidden Intention:
-Location + Time + Structure + Effort + Response
-LTSER.
-
-3. Read:
-- price behavior
-- liquidity
-- aggression
-- absorption
-- consumption
-- CVD
-- order-book behavior
-- heatmap
-- VWAP
-- market structure
-
-4. Never let a 1-minute signal override higher-timeframe context.
-
-5. Execution principle:
-SL first, then Entry.
-
-6. Risk:
-Maximum suggested risk is 1% per trade.
-
-7. Prefer:
-No Retest = No Respect.
-
-8. Never invent live market data.
-Clearly identify unavailable information.
-
-9. Output should be concise and structured:
-CONTEXT
-WHO IS IN CONTROL
-EVIDENCE
-HIDDEN INTENTION
-INVALIDATION
-EXECUTION
-RISK
-FINAL DECISION
-`;
-
-
-    const response = await fetch(
-      "https://api.openai.com/v1/responses",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-
-        body: JSON.stringify({
-          model: "gpt-5.6-sol",
-
-          instructions: guardianInstructions,
-
-          input: `
-USER REQUEST:
-${message}
-
-GUARDIAN CONTEXT:
-${JSON.stringify(context, null, 2)}
-
-LIVE MARKET DATA:
-${JSON.stringify(marketData, null, 2)}
-`
-        })
-      }
-    );
-
-
-    const data = await response.json();
-
-
-    if (!response.ok) {
-
-      return res.status(response.status).json({
-        error: "OpenAI request failed",
-        details: data
-      });
-
-    }
-
-
-    const answer =
-      data.output_text ||
-      data?.output
-        ?.flatMap(item => item.content || [])
-        ?.find(item => item.type === "output_text")
-        ?.text ||
-      "No Guardian response received";
-
+    const ticker = await getBtcTicker();
 
     res.json({
       status: "ok",
-      model: data.model,
-      guardian: answer,
-      responseId: data.id,
+      source: "Bybit",
+      symbol: "BTCUSDT",
+
+      price: ticker.lastPrice || null,
+      markPrice: ticker.markPrice || null,
+      indexPrice: ticker.indexPrice || null,
+
+      openInterest: ticker.openInterest || null,
+      openInterestValue: ticker.openInterestValue || null,
+
+      fundingRate: ticker.fundingRate || null,
+      nextFundingTime: ticker.nextFundingTime || null,
+
+      change24h: ticker.price24hPcnt || null,
+      high24h: ticker.highPrice24h || null,
+      low24h: ticker.lowPrice24h || null,
+
+      volume24h: ticker.volume24h || null,
+      turnover24h: ticker.turnover24h || null,
+
+      bid1Price: ticker.bid1Price || null,
+      ask1Price: ticker.ask1Price || null,
+
       serverTime: new Date().toISOString()
     });
-
-
   } catch (error) {
-
     res.status(500).json({
-      error: "Guardian AI failed",
+      status: "error",
+      error: "Unable to fetch Bybit BTC data",
       message: error.message
     });
-
   }
-
 });
 
+// ========================================
+// 3. GUARDIAN BASIC
+// ========================================
 
-// ==========================
-// 4. GUARDIAN + LIVE BTC
-// ==========================
+app.get("/api/guardian", (req, res) => {
+  res.json({
+    status: "ok",
+    guardian: "Guardian Hidden Intention",
+    framework: {
+      context: "SRSLL",
+      hiddenIntention: "LTESR",
+      executionTimeframe: "1 Minute",
+      risk: "Maximum 1% per trade",
+      rule: "No Retest = No Respect"
+    },
+    openAIConfigured: Boolean(process.env.OPENAI_API_KEY)
+  });
+});
 
-app.post("/api/guardian/btc", async (req, res) => {
+// ========================================
+// Helper: extract Responses API text
+// ========================================
 
-  try {
+function extractOpenAIText(data) {
+  if (data?.output_text) {
+    return data.output_text;
+  }
 
-    const btcResponse = await fetch(
-  "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT",
-  {
-    headers: {
-      "Accept": "application/json",
-      "User-Agent": "Guardian-Dashboard"
+  const parts = [];
+
+  for (const item of data?.output || []) {
+    for (const content of item?.content || []) {
+      if (content?.type === "output_text" && content?.text) {
+        parts.push(content.text);
+      }
     }
   }
-);
 
-const raw = await btcResponse.text();
-
-let btcData;
-
-try {
-  btcData = JSON.parse(raw);
-} catch (parseError) {
-  throw new Error(
-    `Bybit invalid JSON: ${parseError.message} | Raw: ${raw.slice(0, 200)}`
-  );
+  return parts.join("\n").trim();
 }
-    const ticker = btcData?.result?.list?.[0];
 
-
-    if (!ticker) {
-      throw new Error("Unable to obtain BTC ticker");
-    }
-
-
-    const marketData = {
-
-      source: "Bybit",
-
-      symbol: "BTCUSDT",
-
-      price: ticker.lastPrice,
-
-      markPrice: ticker.markPrice,
-
-      indexPrice: ticker.indexPrice,
-// ==============================
-// GUARDIAN + LIVE BTC + CHATGPT
-// ==============================
+// ========================================
+// 4. GUARDIAN + LIVE BTC + OPENAI
+// ========================================
 
 app.post("/api/guardian/btc", async (req, res) => {
   try {
-    // 1) GET LIVE BTC DATA FROM BYBIT
-    const btcResponse = await fetch(
-      "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT",
-      {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "guardian-dashboard"
-        }
-      }
-    );
-
-    const raw = await btcResponse.text();
-
-    let btcData;
-
-    try {
-      btcData = JSON.parse(raw);
-    } catch (parseError) {
-      throw new Error(
-        `Bybit invalid JSON: ${parseError.message} | Raw: ${raw.slice(0, 200)}`
-      );
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        status: "error",
+        error: "OPENAI_API_KEY is not configured in Render"
+      });
     }
 
-    const ticker = btcData?.result?.list?.[0];
-
-    if (!ticker) {
-      throw new Error("Unable to obtain BTC ticker from Bybit");
-    }
+    const ticker = await getBtcTicker();
 
     const marketData = {
       source: "Bybit",
       symbol: "BTCUSDT",
 
-      price: ticker.lastPrice,
-      markPrice: ticker.markPrice,
-      indexPrice: ticker.indexPrice,
+      price: ticker.lastPrice || null,
+      markPrice: ticker.markPrice || null,
+      indexPrice: ticker.indexPrice || null,
 
-      change24h: ticker.price24hPcnt,
-      high24h: ticker.highPrice24h,
-      low24h: ticker.lowPrice24h,
-      volume24h: ticker.volume24h,
+      openInterest: ticker.openInterest || null,
+      openInterestValue: ticker.openInterestValue || null,
 
-      openInterest: ticker.openInterest,
-      fundingRate: ticker.fundingRate,
+      fundingRate: ticker.fundingRate || null,
+      nextFundingTime: ticker.nextFundingTime || null,
 
-      serverTime: new Date().toISOString()
+      change24h: ticker.price24hPcnt || null,
+      high24h: ticker.highPrice24h || null,
+      low24h: ticker.lowPrice24h || null,
+
+      volume24h: ticker.volume24h || null,
+      turnover24h: ticker.turnover24h || null,
+
+      bid1Price: ticker.bid1Price || null,
+      ask1Price: ticker.ask1Price || null
     };
 
-    // 2) SEND MARKET DATA TO OPENAI / CHATGPT
-    const aiResponse = await fetch(
+    const userContext =
+      typeof req.body?.context === "string"
+        ? req.body.context.trim()
+        : "";
+
+    const prompt = `
+You are Guardian, a conservative crypto market analysis assistant.
+
+Framework:
+
+CONTEXT = SRSLL
+- Session
+- Regime
+- Structure
+- Location
+- Last Liquidity Event
+
+HIDDEN INTENTION = LTESR
+- Location
+- Time
+- Effort
+- Structure
+- Response
+
+Execution timeframe:
+1 minute.
+
+Risk rules:
+- Maximum 1% risk per trade.
+- SL first, then entry.
+- No Retest = No Respect.
+- Never claim certainty.
+- Do not invent unavailable order-flow data.
+
+Interpret Price + Open Interest:
+
+Price UP + OI UP
+= fresh participation entering.
+
+Price UP + OI DOWN
+= short covering / short squeeze / deleveraging may be contributing.
+
+Price DOWN + OI UP
+= fresh short participation may be entering.
+
+Price DOWN + OI DOWN
+= longs closing / liquidation / deleveraging may be contributing.
+
+Funding is context only:
+positive funding = longs generally paying shorts.
+negative funding = shorts generally paying longs.
+
+Important:
+A single snapshot cannot prove absorption, spoofing, liquidity sweep,
+acceptance, rejection, or hidden intention.
+
+For those conclusions, require additional evidence such as:
+session, structure, VWAP, heatmap liquidity, delta/CVD,
+orderbook behavior, liquidation behavior and price response.
+
+LIVE MARKET DATA:
+${JSON.stringify(marketData, null, 2)}
+
+USER CONTEXT:
+${userContext || "No extra chart context supplied."}
+
+Return a concise Guardian read using these headings:
+
+1. Market Snapshot
+2. OI + Funding Read
+3. What This Does NOT Prove
+4. SRSLL Context Needed
+5. LTESR Hidden Intention Read
+6. Long / Short / Wait Bias
+7. Confirmation Needed
+8. Risk Lock
+
+If evidence is insufficient, explicitly say WAIT.
+`;
+
+    const aiData = await fetchJson(
       "https://api.openai.com/v1/responses",
       {
         method: "POST",
@@ -332,112 +301,45 @@ app.post("/api/guardian/btc", async (req, res) => {
 
         body: JSON.stringify({
           model: "gpt-5.6-sol",
-
-          instructions: `
-You are Guardian, a conservative crypto market analysis assistant.
-
-Never guarantee profit.
-Never invent unavailable market data.
-
-Use this hierarchy:
-
-CONTEXT = SRSLL
-Session
-Regime
-Structure
-Location
-Last Liquidity Event
-
-HIDDEN INTENTION = LTESR
-Location
-Time
-Effort
-Structure
-Response
-
-Important market behaviour inputs:
-- Price behaviour
-- Open Interest
-- Funding
-- Liquidations
-- Delta / aggression
-- VWAP
-- HVN / LVN
-- Heatmap liquidity clusters
-- Structure HH/HL/LL/LH
-
-Remember the 4 Price + OI combinations:
-
-1. Price UP + OI UP
-Fresh positions entering.
-Move has participation.
-
-2. Price UP + OI DOWN
-Shorts closing / short squeeze / deleveraging.
-
-3. Price DOWN + OI UP
-Fresh shorts entering.
-
-4. Price DOWN + OI DOWN
-Longs closing / liquidation / deleveraging.
-
-For 1-minute hidden-intention analysis:
-First identify context.
-Then interpret effort versus response.
-Do not use microstructure to override higher-timeframe context.
-
-Return concise JSON-like analysis with:
-
-regime
-structure
-priceBehaviour
-oiInterpretation
-fundingInterpretation
-hiddenIntention
-bullishEvidence
-bearishEvidence
-riskFlags
-decision
-
-Decision must be one of:
-LONG CLUE
-SHORT CLUE
-WAIT
-NO TRADE
-          `,
-
-          input: `
-Analyze this live BTCUSDT market data:
-
-${JSON.stringify(marketData, null, 2)}
-          `
+          reasoning: {
+            effort: "medium"
+          },
+          input: prompt
         })
       }
     );
 
-    const aiData = await aiResponse.json();
+    const analysis = extractOpenAIText(aiData);
 
-    if (!aiResponse.ok) {
-      throw new Error(
-        aiData?.error?.message || "OpenAI API request failed"
-      );
-    }
-
-    // 3) RETURN BOTH LIVE DATA + GUARDIAN ANALYSIS
     res.json({
       status: "ok",
+      service: "Guardian Live AI",
+      model: "gpt-5.6-sol",
       marketData,
-      guardian: aiData.output_text || "No Guardian analysis returned",
-      generatedAt: new Date().toISOString()
+      analysis: analysis || "No analysis text returned.",
+      time: new Date().toISOString()
     });
-
   } catch (error) {
-    console.error("Guardian BTC error:", error);
-
     res.status(500).json({
       status: "error",
       error: "Guardian BTC analysis failed",
       message: error.message
     });
   }
+});
+
+// ========================================
+// 5. FRONTEND FALLBACK
+// ========================================
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// ========================================
+// START SERVER
+// ========================================
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Guardian Live running on port ${PORT}`);
 });
